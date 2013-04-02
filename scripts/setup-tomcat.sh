@@ -33,6 +33,16 @@ cat > tomcat/conf/tomcat-users.xml << EOF
 EOF
 chmod 600 tomcat/conf/tomcat-users.xml
 
+# Create the build.properties for other projects
+echo > tomcat/conf/build.properties << EOF
+
+# From ${HOME}/opt/tomcat/conf/build.properties
+catalina.home=${HOME}/opt/tomcat
+manager.username=${USER}
+manager.password=${PASSWORD}
+EOF
+chmod 600 tomcat/conf/build.properties
+
 # Setup environment
 if [ -z "$JAVA_HOME" ]; then
     JAVA_HOME=/usr/lib/jvm/java-7-oracle
