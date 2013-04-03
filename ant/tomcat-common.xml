@@ -1,0 +1,90 @@
+<project name="tomcat-common">
+
+    <property file="${user.home}/opt/tomcat/conf/build.properties"/>
+    
+    <property name="web.dir" value="web" />
+    
+    <property name="build.classes" value="WEB-INF/classes" />
+    
+    <property name="context.path"  value="/${ant.project.name}"/>
+    <property name="manager.url"   value="http://localhost:8080/manager/text"/>
+    
+    <import file="build-common.xml" />
+    
+    <path id="catalina-ant-classpath">
+        <fileset dir="${catalina.home}/bin">
+            <include name="*.jar"/>
+        </fileset>
+        
+        <fileset dir="${catalina.home}/lib">
+            <!-- <include name="*.jar"/> -->
+        </fileset>
+    </path>
+
+    <taskdef resource="org/apache/catalina/ant/catalina.tasks"
+        classpathref="catalina-ant-classpath" />
+       
+    <target name="prepare" depends="build-common.prepare"
+        description="Create the build directories">
+        
+        <copy todir="${build.dir}">
+            <fileset dir="${web.dir}" />
+        </copy>
+        <copy todir="${build.dir}/WEB-INF/lib">
+            <fileset dir="${lib.dir}" />
+        </copy>
+    </target>
+
+    <target name="war" depends="build" description="Generate WAR">
+        <war destfile="build/${ant.project.name}.war" webxml="${web.dir}/WEB-INF/web.xml">
+            <fileset dir="${web.dir}" />
+            <lib dir="${lib.dir}" />
+            <classes dir="${build.dir}/${build.classes}" />
+        </war>
+    </target>
+
+    <target name="install" depends="build"
+        description="Install application to servlet container">
+
+        <deploy
+            url="${manager.url}"
+            username="${manager.username}"
+            password="${manager.password}"
+            path="${context.path}"
+            localWar="file://${basedir}/${build.dir}" />
+
+    </target>
+
+    <target name="list"
+        description="List installed applications on servlet container">
+
+        <list
+            url="${manager.url}"
+            username="${manager.username}"
+            password="${manager.password}" />
+
+    </target>
+
+    <target name="reload" depends="build"
+        description="Reload application on servlet container">
+
+        <reload 
+            url="${manager.url}"
+            username="${manager.username}"
+            password="${manager.password}"
+            path="${context.path}"/>
+
+    </target>
+
+    <target name="uninstall"
+        description="Remove application on servlet container">
+
+        <undeploy 
+            url="${manager.url}"
+            username="${manager.username}"
+            password="${manager.password}"
+            path="${context.path}"/>
+
+    </target>
+
+</project>

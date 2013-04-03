@@ -1,0 +1,96 @@
+<project name="build-common"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+    
+    <property name="src.dir" value="src" />
+
+    <property name="build.dir" value="build" />
+    <property name="build.classes" value="classes" />
+    <property name="lib.dir"   value="lib" />
+
+    <property name="java.target.version" value="1.7" />
+    <property name="compile.debug"       value="true" />
+    <property name="compile.deprecation" value="false" />
+    <property name="compile.optimize"    value="true" />
+
+    <property name="maven.groupid" value="net.jesterpm" />
+    <property name="maven.artifactid" value="${ant.project.name}" />
+
+    <!-- CLASSPATHs -->
+    <path id="classpath.build">
+        <fileset dir="${lib.dir}" />
+    </path>
+    <path id="classpath.run">
+        <path refid="classpath.build" />
+        <path location="${build.dir}/${build.classes}" />
+    </path>
+
+    <!-- Dependency Targets -->
+    <target name="resolve" description="Resolve Dependencies">
+        <ivy:retrieve />
+    </target>
+
+    <target name="dep-report" depends="resolve" description="Generate Dependency Report">
+        <ivy:report todir="${build.dir}" />
+    </target>
+
+    <!-- Building/Running Targets -->
+    <target name="prepare" description="Create the build directories">
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${build.dir}/${build.classes}" />
+    </target>
+
+    <target name="build" depends="prepare" description="Compile Project">
+        <javac srcdir="${src.dir}"
+            destdir="${build.dir}/${build.classes}"
+            debug="${compile.debug}"
+            deprecation="${compile.deprecation}"
+            optimize="${compile.optimize}"
+            source="${java.target.version}"
+            target="${java.target.version}"
+            classpathref="classpath.build" />
+
+        <copy todir="${build.dir}/${build.classes}">
+            <fileset dir="${src.dir}" excludes="**/*.java,**/*.swp"/>
+        </copy>
+    </target>
+
+    <target name="run" depends="build" description="Run ${main.class}">
+        <java classpathref="run.classpath" classname="${main.class}" />
+    </target>
+
+    <target name="clean" description="Clean Project">
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}">
+                <include name="build/**" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="clean-cache" description="Clean the Ivy Cache">
+        <ivy:cleancache />
+    </target>
+
+    <target name="jar" depends="build" description="Generate JAR">
+        <jar destfile="build/${ant.project.name}.jar" basedir="build">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Maven Targets -->
+    <target name="pom" description="Generate pom.xml">
+        <artifact:pom id="mypom"  groupId="${maven.groupid}" artifactId="${maven.artifactid}"
+            version="1.0-SNAPSHOT" name="${maven.artifactid}" />
+        <artifact:writepom pomRefId="mypom" file="${build.dir}/pom.xml" trim="false" />
+    </target>
+
+    <target name="maven-install" depends="clean,jar,pom" 
+        description="Install artifact in local maven repo">
+        
+        <artifact:install file="build/${ant.project.name}.jar">
+            <pom refid="mypom" file="${build.dir}/pom.xml"/>
+        </artifact:install>
+    </target>
+</project>
