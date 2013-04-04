@@ -2,6 +2,8 @@
 
 TOMCAT_VERSION="7.0.39"
 
+PASSWORD=$1
+
 if [ -e $HOME/opt/tomcat ]; then
     echo "Tomcat appears to already be installed at $HOME/opt/tomcat. Skipping..."
     exit 1
@@ -17,8 +19,10 @@ ln -s apache-tomcat-${TOMCAT_VERSION} tomcat
 
 # Configure
 
-echo -n "Enter a tomcat password (stored in plaintext): "
-read -s PASSWORD
+if [ -z "$PASSWORD" ]; then
+    echo -n "Enter a tomcat password (stored in plaintext): "
+    read -s PASSWORD
+fi
 
 rm tomcat/conf/tomcat-users.xml
 cat > tomcat/conf/tomcat-users.xml << EOF
@@ -34,9 +38,7 @@ EOF
 chmod 600 tomcat/conf/tomcat-users.xml
 
 # Create the build.properties for other projects
-echo > tomcat/conf/build.properties << EOF
-
-# From ${HOME}/opt/tomcat/conf/build.properties
+cat > tomcat/conf/build.properties << EOF
 catalina.home=${HOME}/opt/tomcat
 manager.username=${USER}
 manager.password=${PASSWORD}

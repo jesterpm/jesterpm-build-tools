@@ -12,17 +12,17 @@
     <import file="build-common.xml" />
     
     <path id="catalina-ant-classpath">
-        <fileset dir="${catalina.home}/bin">
+        <fileset dir="${catalina.home}/bin" erroronmissingdir="false">
             <include name="*.jar"/>
         </fileset>
         
-        <fileset dir="${catalina.home}/lib">
+        <fileset dir="${catalina.home}/lib" erroronmissingdir="false">
             <!-- <include name="*.jar"/> -->
         </fileset>
     </path>
 
     <taskdef resource="org/apache/catalina/ant/catalina.tasks"
-        classpathref="catalina-ant-classpath" />
+        classpathref="catalina-ant-classpath" onerror="report" />
        
     <target name="prepare" depends="build-common.prepare"
         description="Create the build directories">
@@ -85,6 +85,15 @@
             password="${manager.password}"
             path="${context.path}"/>
 
+    </target>
+
+    <target name="setup-tomcat" unless="catalina.home">
+        <input message="Enter a tomcat password (stored in plaintext):"
+            addproperty="manager.password" />
+        <exec executable="${jesterpm.buildtools.root}/scripts/setup-tomcat.sh"
+            inputstring="${manager.password}">
+            <arg line="${manager.password}" />
+        </exec>
     </target>
 
 </project>
