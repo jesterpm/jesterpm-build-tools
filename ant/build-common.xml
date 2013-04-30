@@ -1,7 +1,7 @@
 <project name="build-common"
     xmlns:ivy="antlib:org.apache.ivy.ant"
     xmlns:artifact="antlib:org.apache.maven.artifact.ant">
-    
+
     <property name="src.dir" value="src" />
 
     <property name="build.dir" value="build" />
@@ -13,9 +13,6 @@
     <property name="compile.deprecation" value="false" />
     <property name="compile.optimize"    value="true" />
 
-    <property name="maven.groupid" value="net.jesterpm" />
-    <property name="maven.artifactid" value="${ant.project.name}" />
-
     <!-- CLASSPATHs -->
     <path id="classpath.build">
         <fileset dir="${lib.dir}" />
@@ -25,22 +22,16 @@
         <path location="${build.dir}/${build.classes}" />
     </path>
 
-    <!-- Dependency Targets -->
-    <target name="resolve" description="Resolve Dependencies">
-        <ivy:retrieve />
-    </target>
-
-    <target name="dep-report" depends="resolve" description="Generate Dependency Report">
-        <ivy:report todir="${build.dir}" />
-    </target>
-
     <!-- Building/Running Targets -->
-    <target name="prepare" description="Create the build directories">
+
+    <!-- Create the build directories -->
+    <target name="prepare">
         <mkdir dir="${build.dir}" />
+        <mkdir dir="${lib.dir}" />
         <mkdir dir="${build.dir}/${build.classes}" />
     </target>
 
-    <target name="build" depends="prepare" description="Compile Project">
+    <target name="build" depends="prepare,resolve" description="Compile Project">
         <javac srcdir="${src.dir}"
             destdir="${build.dir}/${build.classes}"
             debug="${compile.debug}"
@@ -72,25 +63,12 @@
     </target>
 
     <target name="jar" depends="build" description="Generate JAR">
-        <jar destfile="build/${ant.project.name}.jar" basedir="build">
+        <jar destfile="${build.dir}/jars/${ant.project.name}.jar" basedir="${build.dir}/${build.classes}">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
             </manifest>
         </jar>
     </target>
 
-    <!-- Maven Targets -->
-    <target name="pom" description="Generate pom.xml">
-        <artifact:pom id="mypom"  groupId="${maven.groupid}" artifactId="${maven.artifactid}"
-            version="1.0-SNAPSHOT" name="${maven.artifactid}" />
-        <artifact:writepom pomRefId="mypom" file="${build.dir}/pom.xml" trim="false" />
-    </target>
-
-    <target name="maven-install" depends="clean,jar,pom" 
-        description="Install artifact in local maven repo">
-        
-        <artifact:install file="build/${ant.project.name}.jar">
-            <pom refid="mypom" file="${build.dir}/pom.xml"/>
-        </artifact:install>
-    </target>
+    <import file="${jesterpm.buildtools.root}/ant/ivy-common.xml" />
 </project>
