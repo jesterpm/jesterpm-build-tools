@@ -11,21 +11,26 @@
     <target name="ivy-install" unless="ivy.installed">
         <mkdir dir="${ivy.home}"/>
         <get
-            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.jar.version}/${ivy.jar.name}" 
+            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.jar.version}/${ivy.jar.name}"
             dest="${ivy.home}/${ivy.jar.name}" />
     </target>
-    
+
     <target name="ivy-init" depends="ivy-install">
-        <taskdef resource="org/apache/ivy/ant/antlib.xml" 
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
                  uri="antlib:org.apache.ivy.ant"
                  classpath="${ivy.home}/${ivy.jar.name}" />
         <ivy:resolve/>
     </target>
-     
-    <target name="resolve" depends="ivy-init" description="Download project dependencies">
-        <ivy:retrieve />
+
+    <target name="clean-cache" depends="ivy-init" description="Clean the Ivy Cache">
+        <ivy:cleancache />
     </target>
-     
+
+    <target name="resolve" depends="ivy-init" if="ivy.deps.changed"
+        description="Download project dependencies">
+        <ivy:retrieve sync="true" symlink="true" />
+    </target>
+
     <target name="dep-report" depends="resolve" description="Generate dependency report">
         <ivy:report todir="${build.dir}" />
     </target>
@@ -43,15 +48,15 @@
             <mapping conf="default" scope="compile"/>
         </ivy:makepom>
     </target>
-     
+
     <target name="publish-local" depends="jar,ivy-init,gen-pom"
         description="Publish to local maven repo for building other projects">
 
-        <ivy:publish resolver="local-m2-publish" forcedeliver="true" 
+        <ivy:publish resolver="local-m2-publish" forcedeliver="true"
             overwrite="true" publishivy="false">
 
             <artifacts pattern="${build.dir}/[type]s/[artifact].[ext]"/>
         </ivy:publish>
     </target>
-     
+
 </project>

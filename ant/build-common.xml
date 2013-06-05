@@ -31,7 +31,9 @@
         <mkdir dir="${build.dir}/${build.classes}" />
     </target>
 
-    <target name="build" depends="prepare,resolve" description="Compile Project">
+    <target name="build" depends="resolve,compile" description="Compile Project"/>
+
+    <target name="compile" depends="prepare">
         <javac srcdir="${src.dir}"
             destdir="${build.dir}/${build.classes}"
             debug="${compile.debug}"
@@ -56,10 +58,6 @@
                 <include name="build/**" />
             </fileset>
         </delete>
-    </target>
-
-    <target name="clean-cache" description="Clean the Ivy Cache">
-        <ivy:cleancache />
     </target>
 
     <target name="jar" depends="build" description="Generate JAR">
