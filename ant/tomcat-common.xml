@@ -55,6 +55,49 @@
 
     </target>
 
+    <target name="prompt">
+       <input message="Manager URL"
+               defaultvalue="${deploy.manager.url}"
+               addproperty="prompt.manager.url" />
+
+       <input message="Context Path"
+               defaultvalue="${deploy.context.path}"
+               addproperty="prompt.context.path" />
+
+       <input message="Username"
+               defaultvalue="${deploy.manager.username}"
+               addproperty="prompt.manager.username" />
+
+       <input message="Password"
+               defaultvalue="${deploy.manager.password}"
+               addproperty="prompt.manager.password" />
+    </target>
+
+    <target name="deploy" depends="prompt,build"
+        description="Install application to servlet container in production">
+
+        <deploy
+            url="${prompt.manager.url}"
+            username="${prompt.manager.username}"
+            password="${prompt.manager.password}"
+            path="${prompt.context.path}"
+            war="file://${basedir}/${build.dir}" />
+
+    </target>
+
+    <target name="undeploy" depends="prompt"
+        description="Uninstall application to servlet container in production">
+
+        <undeploy
+            url="${prompt.manager.url}"
+            username="${prompt.manager.username}"
+            password="${prompt.manager.password}"
+            path="${prompt.context.path}" />
+
+    </target>
+
+    <target name="redeploy" depends="prompt,undeploy,deploy" />
+
     <target name="list"
         description="List installed applications on servlet container">
 
