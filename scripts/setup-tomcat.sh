@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TOMCAT_VERSION="7.0.42"
 

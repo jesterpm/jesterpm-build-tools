@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 CASSANDRA_VERSION="1.2.9"
 
