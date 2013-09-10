@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOMCAT_VERSION="7.0.39"
+TOMCAT_VERSION="7.0.42"
 
 PASSWORD=$1
 
