@@ -3,9 +3,15 @@
     xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
     <property name="src.dir" value="src" />
+    <property name="test.dir" value="tst" />
 
-    <property name="build.dir" value="build" />
+    <property name="output.dir" value="build" />
+    <property name="build.dir" value="${output.dir}/root" />
+    <property name="output.testreport" value="${output.dir}/testreport" />
+    <property name="output.coveragereport" value="${output.dir}/coverage" />
+
     <property name="build.classes" value="classes" />
+    <property name="build.tests" value="tests" />
     <property name="lib.dir"   value="lib" />
 
     <property name="java.target.version" value="1.7" />
@@ -21,17 +27,27 @@
         <path refid="classpath.build" />
         <path location="${build.dir}/${build.classes}" />
     </path>
+    <path id="classpath.test">
+        <path refid="classpath.run" />
+        <path location="${build.dir}/${build.tests}" />
+    </path>
+
+    <taskdef classpathref="classpath.test" resource="tasks.properties" />
 
     <!-- Building/Running Targets -->
 
     <!-- Create the build directories -->
     <target name="prepare">
+        <mkdir dir="${output.dir}" />
         <mkdir dir="${build.dir}" />
+        <mkdir dir="${output.testreport}" />
+        <mkdir dir="${output.coveragereport}" />
         <mkdir dir="${lib.dir}" />
         <mkdir dir="${build.dir}/${build.classes}" />
+        <mkdir dir="${build.dir}/${build.tests}" />
     </target>
 
-    <target name="build" depends="resolve,compile" description="Compile Project"/>
+    <target name="build" depends="resolve,compile,test" description="Compile Project"/>
 
     <target name="compile" depends="prepare">
         <javac srcdir="${src.dir}"
@@ -48,8 +64,89 @@
         </copy>
     </target>
 
+    <target name="compile-tests" depends="compile">
+        <javac srcdir="${test.dir}"
+            destdir="${build.dir}/${build.tests}"
+            debug="${compile.debug}"
+            deprecation="${compile.deprecation}"
+            optimize="${compile.optimize}"
+            source="${java.target.version}"
+            target="${java.target.version}"
+            classpathref="classpath.test" />
+
+        <copy todir="${build.dir}/${build.tests}">
+            <fileset dir="${test.dir}" excludes="**/*.java,**/*.swp"/>
+        </copy>
+    </target>
+
+    <target name="test" depends="compile-tests">
+        <junit printsummary="on"
+               fork="on"
+               dir="${build.dir}"
+               failureproperty="tests.failed"
+               showoutput="true">
+
+            <classpath>
+                <path refid="classpath.test" />
+            </classpath>
+
+            <formatter type="xml"/>
+
+            <batchtest todir="${output.testreport}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+
+        <junitreport todir="${output.testreport}">
+            <fileset dir="${output.testreport}" includes="*.xml" />
+            <report todir="${output.testreport}" />
+        </junitreport>
+
+        <fail message="TEST FAILURE" if="tests.failed" />
+    </target>
+
+    <target name="coverage" depends="compile-tests">
+        <cobertura-instrument todir="${output.coveragereport}"
+                              datafile="${output.coveragereport}/cobertura.ser">
+            <fileset dir="${build.dir}/${build.classes}">
+                <include name="**/*.class" />
+            </fileset>
+        </cobertura-instrument>
+
+        <junit printsummary="on"
+               fork="on"
+               dir="${build.dir}"
+               haltonfailure="true">
+
+            <jvmarg value="-XX:-UseSplitVerifier" />
+
+            <sysproperty key="net.sourceforge.cobertura.datafile"
+                         file="${output.coveragereport}/cobertura.ser" />
+
+            <classpath>
+                <path location="${output.coveragereport}" />
+                <path refid="classpath.test" />
+            </classpath>
+
+            <formatter type="xml"/>
+
+            <batchtest todir="${output.coveragereport}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+
+        <cobertura-report format="html"
+                          datafile="${output.coveragereport}/cobertura.ser"
+                          destdir="${output.coveragereport}"
+                          srcdir="${src.dir}" />
+    </target>
+
     <target name="run" depends="build" description="Run ${main.class}">
-        <java classpathref="run.classpath" classname="${main.class}" />
+        <java classpathref="classpath.run" classname="${main.class}" />
     </target>
 
     <target name="clean" description="Clean Project">
