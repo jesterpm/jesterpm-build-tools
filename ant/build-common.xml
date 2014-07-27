@@ -32,8 +32,6 @@
         <path location="${build.dir}/${build.tests}" />
     </path>
 
-    <taskdef classpathref="classpath.test" resource="tasks.properties" />
-
     <!-- Building/Running Targets -->
 
     <!-- Create the build directories -->
@@ -108,6 +106,8 @@
     </target>
 
     <target name="coverage" depends="compile-tests">
+        <taskdef classpathref="classpath.test" resource="tasks.properties" />
+
         <cobertura-instrument todir="${output.coveragereport}"
                               datafile="${output.coveragereport}/cobertura.ser">
             <fileset dir="${build.dir}/${build.classes}">
